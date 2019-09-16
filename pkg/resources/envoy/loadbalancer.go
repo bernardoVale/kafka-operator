@@ -30,13 +30,19 @@ import (
 func (r *Reconciler) loadBalancer(log logr.Logger) runtime.Object {
 
 	exposedPorts := getExposedServicePorts(r.KafkaCluster.Spec.ListenersConfig.ExternalListeners, r.KafkaCluster.Spec.BrokerConfigs)
+	objectMeta := templates.ObjectMeta(EnvoyServiceName, map[string]string{}, r.KafkaCluster)
 
+	objectMeta.Annotations = map[string]string{
+		"service.beta.kubernetes.io/aws-load-balancer-internal": "10.0.0.0/8",
+		"service.beta.kubernetes.io/aws-load-balancer-type":     "nlb",
+	}
 	service := &corev1.Service{
-		ObjectMeta: templates.ObjectMeta(EnvoyServiceName, map[string]string{}, r.KafkaCluster),
+		ObjectMeta: objectMeta,
 		Spec: corev1.ServiceSpec{
-			Selector: map[string]string{"app": "envoy"},
-			Type:     corev1.ServiceTypeLoadBalancer,
-			Ports:    exposedPorts,
+			Selector:                 map[string]string{"app": "envoy"},
+			Type:                     corev1.ServiceTypeLoadBalancer,
+			Ports:                    exposedPorts,
+			LoadBalancerSourceRanges: []string{"10.0.0.0/8"},
 		},
 	}
 	return service

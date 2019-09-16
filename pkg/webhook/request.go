@@ -53,6 +53,7 @@ func (s *webhookServer) validate(ar *admissionv1beta1.AdmissionReview) *admissio
 }
 
 func (s *webhookServer) serve(w http.ResponseWriter, r *http.Request) {
+	log.Info("got request")
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
